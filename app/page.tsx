@@ -4,12 +4,16 @@ import React, { useMemo, useState } from "react";
 
 // ------------------------------------------------------
 // LOIDraft by Intenra — Proof‑of‑Concept UI (React + Tailwind)
-// - Single file, default export, production‑ready styling
-// - Includes: Landing, Dashboard, LOI Editor with drag‑to‑reorder clauses
-// - Export buttons are stubbed (replace with real integrations later)
 // ------------------------------------------------------
 
-const DEFAULT_CLAUSES = [
+type Clause = {
+  id: string;
+  title: string;
+  body: string;
+  included: boolean;
+};
+
+const DEFAULT_CLAUSES: Clause[] = [
   {
     id: "rent",
     title: "Base Rent",
@@ -75,7 +79,7 @@ const DEFAULT_CLAUSES = [
   },
 ];
 
-function classNames(...cn) {
+function classNames(...cn: Array<string | false | null | undefined>): string {
   return cn.filter(Boolean).join(" ");
 }
 
@@ -84,17 +88,12 @@ export default function App() {
   const [tenant, setTenant] = useState("Acme Retail LLC");
   const [locationName, setLocationName] = useState("123 Main Street, Orlando FL");
   const [author, setAuthor] = useState("LOIDraft by Intenra");
-  const [clauses, setClauses] = useState(DEFAULT_CLAUSES);
-  const [dragId, setDragId] = useState(null);
+  const [clauses, setClauses] = useState<Clause[]>(DEFAULT_CLAUSES);
+  const [dragId, setDragId] = useState<string | null>(null);
 
-  const orderedClauses = useMemo(
-    () => clauses,
-    [clauses]
-  );
-
-  const onDragStart = (id) => setDragId(id);
-  const onDragOver = (e) => e.preventDefault();
-  const onDrop = (overId) => {
+  const onDragStart = (id: string) => setDragId(id);
+  const onDragOver = (e: React.DragEvent<HTMLLIElement>) => e.preventDefault();
+  const onDrop = (overId: string) => {
     if (!dragId || dragId === overId) return;
     const from = clauses.findIndex((c) => c.id === dragId);
     const to = clauses.findIndex((c) => c.id === overId);
@@ -106,27 +105,25 @@ export default function App() {
   };
 
   const includedClausesText = useMemo(() => {
-    const list = orderedClauses.filter((c) => c.included);
+    const list = clauses.filter((c) => c.included);
     return list
       .map((c, idx) => `${idx + 1}. ${c.title}\n\n${c.body}`)
       .join("\n\n");
-  }, [orderedClauses]);
+  }, [clauses]);
 
   const previewDoc = useMemo(() => {
     return `LETTER OF INTENT\n\nTenant: ${tenant}\nLocation: ${locationName}\n\n${includedClausesText}\n\nSincerely,\n${author}`;
   }, [tenant, locationName, includedClausesText, author]);
 
-  function exportStub(kind) {
+  function exportStub(kind: string) {
     alert(`${kind} export is a demo in this prototype. In production, connect DocxTemplater or a PDF service.`);
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2e3a4b] via-[#2a3545] to-[#232f3e] text-white">
-      {/* Header */}
       <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/5 bg-white/5">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Logo cluster: LOIDraft logo, small "by", Intenra logo */}
             <div className="flex items-center gap-2">
               <div className="h-7 w-28 bg-white/10 rounded-xl grid place-items-center text-sm font-semibold tracking-wide">
                 LOIDraft
@@ -145,12 +142,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* Routes */}
       {route === "home" && <Home onGetStarted={() => setRoute("editor")} />}
       {route === "dash" && <Dashboard />}
       {route === "editor" && (
         <main className="mx-auto max-w-7xl px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left column: Inputs and Clause List */}
           <section className="space-y-4">
             <Card>
               <h2 className="text-xl font-semibold">Deal Details</h2>
@@ -186,7 +181,7 @@ export default function App() {
               </div>
 
               <ul className="mt-4 space-y-2">
-                {orderedClauses.map((c) => (
+                {clauses.map((c) => (
                   <li
                     key={c.id}
                     draggable
@@ -237,17 +232,12 @@ export default function App() {
               </ul>
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button onClick={() => exportStub("DOCX")} className="btn">
-                  Export DOCX
-                </button>
-                <button onClick={() => exportStub("PDF")} className="btn btn-secondary">
-                  Export PDF
-                </button>
+                <button onClick={() => exportStub("DOCX")} className="btn">Export DOCX</button>
+                <button onClick={() => exportStub("PDF")} className="btn btn-secondary">Export PDF</button>
               </div>
             </Card>
           </section>
 
-          {/* Right column: Live Preview */}
           <section className="space-y-4">
             <Card>
               <div className="flex items-center justify-between">
@@ -271,7 +261,6 @@ export default function App() {
         </main>
       )}
 
-      {/* Footer */}
       <footer className="mt-12 border-t border-white/10">
         <div className="mx-auto max-w-7xl px-4 py-8 text-sm opacity-80 flex items-center justify-between">
           <p>© {new Date().getFullYear()} Intenra. All rights reserved.</p>
@@ -282,7 +271,7 @@ export default function App() {
   );
 }
 
-function Tab({ label, active, onClick }) {
+function Tab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -296,13 +285,13 @@ function Tab({ label, active, onClick }) {
   );
 }
 
-function Card({ children }) {
+function Card({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.2)]">{children}</div>
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <div className="text-xs opacity-80 mb-1">{label}</div>
@@ -319,7 +308,7 @@ function GripIcon() {
   );
 }
 
-function Home({ onGetStarted }) {
+function Home({ onGetStarted }: { onGetStarted: () => void }) {
   return (
     <main className="mx-auto max-w-7xl px-4 py-16">
       <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -353,7 +342,7 @@ function Home({ onGetStarted }) {
               <li>Toggle include or hide</li>
               <li>Export to DOCX or PDF</li>
             </ul>
-            <div className="mt-4 h-24 rounded-xl bg-[#f3f5f7] grid place-items-center text-[#475569] text-sm">
+             <div className="mt-4 h-24 rounded-xl bg-[#f3f5f7] grid place-items-center text-[#475569] text-sm">
               Preview area
             </div>
           </div>
@@ -361,22 +350,26 @@ function Home({ onGetStarted }) {
       </div>
 
       <section id="learn" className="mt-20 grid md:grid-cols-3 gap-4">
-        <Feature title="Fast" text="Enter deal details and generate a clean LOI without retyping common clauses."/>
-        <Feature title="Flexible" text="Reorder clauses and hide sections to match each negotiation."/>
-        <Feature title="Professional" text="Export DOCX and PDF with your branding and formatting."/>
+        <Feature title="Fast" text="Enter deal details and generate a clean LOI without retyping common clauses." />
+        <Feature title="Flexible" text="Reorder clauses and hide sections to match each negotiation." />
+        <Feature title="Professional" text="Export DOCX and PDF with your branding and formatting." />
       </section>
     </main>
   );
 }
-
 function Dashboard() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-10">
       <h2 className="text-2xl font-bold">Your LOIs</h2>
-      <p className="mt-2 text-white/80">This prototype shows how saved LOIs would appear once persistence is wired up.</p>
+      <p className="mt-2 text-white/80">
+        This prototype shows how saved LOIs would appear once persistence is wired up.
+      </p>
       <div className="mt-6 grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {[1,2,3,4,5,6].map((i) => (
-          <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-white/10 bg-white/5 p-4"
+          >
             <p className="text-sm opacity-80">Oct {10 + i}, 2025</p>
             <h3 className="mt-1 font-semibold">Sample LOI #{i}</h3>
             <p className="text-sm opacity-80">Tenant: Demo Retail</p>
@@ -391,7 +384,7 @@ function Dashboard() {
   );
 }
 
-function Feature({ title, text }) {
+function Feature({ title, text }: { title: string; text: string }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
       <div className="text-sm opacity-80">Feature</div>
@@ -401,32 +394,12 @@ function Feature({ title, text }) {
   );
 }
 
-function Stat({ kpi, label }) {
+function Stat({ kpi, label }: { kpi: string; label: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
       <div className="text-lg font-semibold">{kpi}</div>
       <div className="text-xs opacity-80">{label}</div>
     </div>
   );
-}
-
-// Tailwind utility buttons
-const btnBase = "inline-flex items-center justify-center rounded-xl px-3.5 py-2.5 text-sm font-semibold shadow hover:shadow-lg transition";
-function ButtonBase({ children, className }) {
-  return <button className={classNames(btnBase, className)}>{children}</button>;
-}
-
-// Extend global styles inside the component file (scoped via Tailwind classes in this environment)
-const style = `
-.btn { @apply inline-flex items-center justify-center rounded-xl px-3.5 py-2.5 text-sm font-semibold bg-white text-[#1c2430] hover:bg-white/90 active:scale-[0.98] transition; }
-.btn-secondary { @apply bg-white/10 text-white hover:bg-white/20; }
-`;
-
-// Inject style tag
-if (typeof document !== "undefined" && !document.getElementById("loidraft-styles")) {
-  const s = document.createElement("style");
-  s.id = "loidraft-styles";
-  s.innerHTML = style;
-  document.head.appendChild(s);
 }
 
